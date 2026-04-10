@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSP Billing Form</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #2d3748;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --success: #3fb950;
+    --danger: #f85149;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  .header { text-align: center; margin-bottom: 36px; padding-top: 8px; }
+
+  .header .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  .header h1 { font-family: var(--mono); font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .header p { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+  .form-grid { max-width: 800px; margin: 0 auto; display: grid; gap: 16px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .card:focus-within::before { opacity: 1; }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row.full { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 9px 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.08);
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  /* ── Date rows ── */
+  .date-entries { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+
+  .date-entry {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .date-entry .de-field { display: flex; flex-direction: column; gap: 4px; }
+
+  .date-entry .de-total {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 9px 10px;
+    text-align: center;
+    min-width: 70px;
+    white-space: nowrap;
+  }
+
+  .remove-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--danger);
+    border-radius: 5px;
+    width: 34px;
+    height: 36px;
+    padding: 0;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: var(--sans);
+  }
+
+  .remove-btn:hover { border-color: var(--danger); background: rgba(248,81,73,0.08); }
+
+  .grand-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .grand-total-row span { color: var(--accent); font-weight: 600; font-size: 14px; }
+
+  /* ── Equipment ── */
+  .equipment-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .equipment-item { display: flex; align-items: center; gap: 8px; }
+  .equipment-item input.eq-desc { flex: 1; }
+  .equipment-item input.eq-qty { width: 68px; flex-shrink: 0; text-align: center; }
+
+  .add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--accent);
+    border-radius: 5px;
+    padding: 7px 14px;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    text-transform: uppercase;
+    margin-top: 6px;
+    width: fit-content;
+  }
+
+  .add-btn:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+
+  .actions { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
+
+  button {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 5px;
+    padding: 11px 24px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: #000; font-weight: 600; }
+  .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+  .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+  /* ── Output ── */
+  .output-section { max-width: 800px; margin: 20px auto 0; display: none; }
+  .output-section.visible { display: block; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .output-header span {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--success);
+  }
+
+  .copy-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    background: var(--success);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { background: #2ea043; }
+  .copy-btn.copied { background: var(--accent2); color: #fff; }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 22px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .out-label {
+    font-weight: 700;
+    font-family: var(--sans);
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    .row { grid-template-columns: 1fr; }
+    .date-entry { grid-template-columns: 1fr 1fr; }
+    .date-entry .de-total { grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">MSP // Billing</div>
+  <h1>Appointment Billing Form</h1>
+  <p>Fill out the details below to generate a ready-to-paste billing summary</p>
+</div>
+
+<div class="form-grid">
+
+  <!-- CLIENT INFO -->
+  <div class="card">
+    <div class="card-title">Client Info</div>
+    <div class="row">
+      <div class="field">
+        <label>Client / Company Name</label>
+        <input type="text" id="clientName" placeholder="Acme Corp">
+      </div>
+      <div class="field">
+        <label>Customer Type</label>
+        <select id="customerType" onchange="handleCustomerType()">
+          <option value="">Select...</option>
+          <option value="MSC">MSC</option>
+          <option value="Non-MSC">Non-MSC</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATE & TIME -->
+  <div class="card">
+    <div class="card-title">Date & Time</div>
+
+    <div class="date-entries" id="dateEntries"></div>
+
+    <button class="add-btn" onclick="addDateRow()">+ Add Date</button>
+
+    <div id="grandTotalRow" class="grand-total-row" style="display:none; margin-top:12px;">
+      TOTAL TIME &nbsp;<span id="grandTotalDisplay">0h 0m</span>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div class="field">
+        <label>Appointment Type</label>
+        <select id="apptType">
+          <option value="">Select...</option>
+          <option>Onsite</option>
+          <option>Offsite</option>
+          <option>Remote</option>
+          <option>Project</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICE DETAILS -->
+  <div class="card">
+    <div class="card-title">Service Details</div>
+    <div class="row full" style="margin-bottom:12px">
+      <div class="field">
+        <label>Appointment Summary</label>
+        <input type="text" id="issueSummary" placeholder="Brief one-line description of the issue or request">
+      </div>
+    </div>
+    <div class="row full">
+      <div class="field">
+        <label>Work Performed (detail)</label>
+        <textarea id="workPerformed" placeholder="Describe steps taken, findings, configurations changed, etc."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- EQUIPMENT DETAILS -->
+  <div class="card">
+    <div class="card-title">Equipment Details</div>
+
+    <div class="field" style="margin-bottom:16px">
+      <label>Equipment Given to Customer</label>
+      <div class="equipment-list" id="equipmentList"></div>
+      <button class="add-btn" onclick="addEquipmentRow()">+ Add Item</button>
+    </div>
+
+    <div class="row full">
+      <div class="field">
+        <label>Notes (for biller)</label>
+        <textarea id="billingNotes" placeholder="Any special instructions, quote references, PO numbers, or context for the biller..." style="min-height:60px"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-secondary" onclick="clearForm()">Clear Form</button>
+    <button class="btn-primary" onclick="generateOutput()">Generate Billing Summary →</button>
+  </div>
+
+</div>
+
+<!-- OUTPUT -->
+<div class="output-section" id="outputSection">
+  <div class="output-header">
+    <span>✓ Ready to paste</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyOutput()">Copy to Clipboard</button>
+  </div>
+  <div class="output-box" id="outputBox"></div>
+</div>
+
+<script>
+  // ── Customer type toggle ──────────────────────────────────
+  function handleCustomerType() {
+    const isMSC = document.getElementById('customerType').value === 'MSC';
+    // Hide time fields on all existing date rows if MSC
+    document.querySelectorAll('.date-entry').forEach(row => {
+      row.querySelectorAll('.time-field').forEach(f => f.style.display = isMSC ? 'none' : '');
+      row.querySelector('.de-total').style.display = isMSC ? 'none' : '';
+    });
+    updateGrandTotal();
+  }
+
+  // ── Date rows ─────────────────────────────────────────────
+  let dateRowId = 0;
+
+  function addDateRow() {
+    const isMSC = document.getElementById('customerType').value === 'MSC';
+    const id = dateRowId++;
+    const container = document.getElementById('dateEntries');
+    const div = document.createElement('div');
+    div.className = 'date-entry';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="de-field">
+        <label style="font-size:10px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Date</label>
+        <input type="date" class="de-date" onchange="updateRowTotal(${id})">
+      </div>
+      <div class="de-field time-field" style="display:${isMSC ? 'none' : ''}">
+        <label style="font-size:10px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Time In</label>
+        <input type="time" class="de-in" onchange="updateRowTotal(${id})">
+      </div>
+      <div class="de-field time-field" style="display:${isMSC ? 'none' : ''}">
+        <label style="font-size:10px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Time Out</label>
+        <input type="time" class="de-out" onchange="updateRowTotal(${id})">
+      </div>
+      <div class="de-total" id="rowTotal-${id}" style="display:${isMSC ? 'none' : ''}">--</div>
+      <button class="remove-btn" onclick="removeDateRow(this)" title="Remove">✕</button>
+    `;
+    div.querySelector('.de-date').valueAsDate = new Date();
+    container.appendChild(div);
+    updateGrandTotal();
+  }
+
+  function removeDateRow(btn) {
+    btn.closest('.date-entry').remove();
+    updateGrandTotal();
+  }
+
+  function updateRowTotal(id) {
+    const row = document.querySelector(`.date-entry[data-id="${id}"]`);
+    const inVal = row.querySelector('.de-in').value;
+    const outVal = row.querySelector('.de-out').value;
+    const display = document.getElementById(`rowTotal-${id}`);
+    if (inVal && outVal) {
+      const mins = calcMins(inVal, outVal);
+      display.textContent = mins > 0 ? fmtDuration(mins) : '--';
+    } else {
+      display.textContent = '--';
+    }
+    updateGrandTotal();
+  }
+
+  function calcMins(inVal, outVal) {
+    const [ih, im] = inVal.split(':').map(Number);
+    const [oh, om] = outVal.split(':').map(Number);
+    return (oh * 60 + om) - (ih * 60 + im);
+  }
+
+  function fmtDuration(mins) {
+    if (mins <= 0) return '--';
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
+  }
+
+  function updateGrandTotal() {
+    const isMSC = document.getElementById('customerType').value === 'MSC';
+    const rows = document.querySelectorAll('.date-entry');
+    const grandRow = document.getElementById('grandTotalRow');
+    if (isMSC || rows.length < 2) { grandRow.style.display = 'none'; return; }
+
+    let total = 0;
+    rows.forEach(row => {
+      const inVal = row.querySelector('.de-in').value;
+      const outVal = row.querySelector('.de-out').value;
+      if (inVal && outVal) {
+        const m = calcMins(inVal, outVal);
+        if (m > 0) total += m;
+      }
+    });
+    document.getElementById('grandTotalDisplay').textContent = total > 0 ? fmtDuration(total) : '0h';
+    grandRow.style.display = rows.length >= 2 ? 'flex' : 'none';
+  }
+
+  function getDateRows() {
+    return Array.from(document.querySelectorAll('.date-entry')).map(row => {
+      const isMSC = document.getElementById('customerType').value === 'MSC';
+      const dateEl = row.querySelector('.de-date');
+      const inEl   = row.querySelector('.de-in');
+      const outEl  = row.querySelector('.de-out');
+      const date   = dateEl.value ? formatDate(dateEl.value) : '';
+      if (isMSC) return date ? { date, time: null, duration: null } : null;
+      const inFmt  = inEl.value  ? formatTime(inEl.value)  : '';
+      const outFmt = outEl.value ? formatTime(outEl.value) : '';
+      const mins   = inEl.value && outEl.value ? calcMins(inEl.value, outEl.value) : 0;
+      return { date, time: inFmt && outFmt ? `${inFmt} – ${outFmt}` : '', duration: mins > 0 ? fmtDuration(mins) : '' };
+    }).filter(Boolean).filter(r => r.date);
+  }
+
+  // ── Equipment rows ────────────────────────────────────────
+  function addEquipmentRow() {
+    const list = document.getElementById('equipmentList');
+    const item = document.createElement('div');
+    item.className = 'equipment-item';
+    item.innerHTML = `
+      <input type="number" class="eq-qty" placeholder="Qty" min="1" value="1">
+      <input type="text" class="eq-desc" placeholder="e.g. Cisco SG110-16 Switch, S/N: ABC123">
+      <button class="remove-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>
+    `;
+    list.appendChild(item);
+    item.querySelector('.eq-desc').focus();
+  }
+
+  function getEquipmentItems() {
+    return Array.from(document.querySelectorAll('#equipmentList .equipment-item')).map(row => {
+      const qty  = row.querySelector('.eq-qty')?.value.trim() || '1';
+      const desc = row.querySelector('.eq-desc')?.value.trim() || '';
+      return desc ? `(${qty}) ${desc}` : null;
+    }).filter(Boolean);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+  function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+  function formatTime(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':').map(Number);
+    return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const [y, mo, day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[parseInt(mo)-1]} ${parseInt(day)}, ${y}`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Generate output ───────────────────────────────────────
+  function generateOutput() {
+    const isMSC = document.getElementById('customerType').value === 'MSC';
+    const dateRows = getDateRows();
+    const equipment = getEquipmentItems();
+
+    const rows = [];
+
+    if (val('clientName'))   rows.push(['client',       val('clientName')]);
+    if (val('customerType')) rows.push(['customerType', val('customerType')]);
+
+    // Date & time block
+    if (dateRows.length) {
+      let dtValue = '';
+      dateRows.forEach((r, i) => {
+        if (dateRows.length > 1) dtValue += `${i + 1}. `;
+        dtValue += r.date;
+        if (!isMSC && r.time)     dtValue += `\n   ${r.time}`;
+        if (!isMSC && r.duration) dtValue += `  (${r.duration})`;
+        if (i < dateRows.length - 1) dtValue += '\n';
+      });
+
+      // Grand total when multiple days
+      if (!isMSC && dateRows.length > 1) {
+        let totalMins = 0;
+        document.querySelectorAll('.date-entry').forEach(row => {
+          const inVal  = row.querySelector('.de-in').value;
+          const outVal = row.querySelector('.de-out').value;
+          if (inVal && outVal) { const m = calcMins(inVal, outVal); if (m > 0) totalMins += m; }
+        });
+        if (totalMins > 0) dtValue += `\n\nTotal Time: ${fmtDuration(totalMins)}`;
+      }
+
+      rows.push(['dateTime', dtValue]);
+    }
+
+    if (val('apptType'))       rows.push(['apptType',      val('apptType')]);
+    if (val('issueSummary'))   rows.push(['summary',       val('issueSummary')]);
+    if (val('workPerformed'))  rows.push(['workPerformed', val('workPerformed')]);
+    if (equipment.length)      rows.push(['equipment',     equipment]);
+    if (val('billingNotes'))   rows.push(['notes',         val('billingNotes')]);
+
+    const labels = {
+      client:        'Client:',
+      customerType:  'Customer Type:',
+      dateTime:      'Date & Time:',
+      apptType:      'Appointment Type:',
+      summary:       'Appointment Summary:',
+      workPerformed: 'Work Performed:',
+      equipment:     'Equipment:',
+      notes:         'Notes:',
+    };
+
+    let plain = '';
+    rows.forEach(([key, value]) => {
+      plain += `${labels[key]}\n`;
+      if (Array.isArray(value)) {
+        value.forEach(e => { plain += `  • ${e}\n`; });
+      } else {
+        value.split('\n').forEach(l => { plain += `${l}\n`; });
+      }
+      plain += '\n';
+    });
+
+    let html = '';
+    rows.forEach(([key, value]) => {
+      html += `<span class="out-label">${escHtml(labels[key])}</span>\n`;
+      if (Array.isArray(value)) {
+        value.forEach(e => { html += `  • ${escHtml(e)}\n`; });
+      } else {
+        value.split('\n').forEach(l => { html += `${escHtml(l)}\n`; });
+      }
+      html += '\n';
+    });
+
+    const box = document.getElementById('outputBox');
+    box.innerHTML = html;
+    box._plainText = plain;
+
+    const sec = document.getElementById('outputSection');
+    sec.classList.add('visible');
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('copyBtn').textContent = 'Copy to Clipboard';
+    document.getElementById('copyBtn').classList.remove('copied');
+  }
+
+  function copyOutput() {
+    const plain = document.getElementById('outputBox')._plainText || '';
+    navigator.clipboard.writeText(plain).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
+    });
+  }
+
+  function clearForm() {
+    document.querySelectorAll('input:not([type="checkbox"]), select, textarea').forEach(el => {
+      el.value = '';
+    });
+    document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+    document.getElementById('equipmentList').innerHTML = '';
+    document.getElementById('dateEntries').innerHTML = '';
+    document.getElementById('grandTotalRow').style.display = 'none';
+    document.getElementById('outputSection').classList.remove('visible');
+  }
+
+  // Add one date row on load
+  addDateRow();
+</script>
+</body>
+</html>
