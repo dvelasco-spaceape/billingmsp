@@ -136,7 +136,7 @@
     border-radius: 6px;
     padding: 12px 14px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto auto;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
     gap: 10px;
     align-items: end;
   }
@@ -298,6 +298,79 @@
     .date-entry { grid-template-columns: 1fr 1fr; }
     .date-entry .de-total { grid-column: span 2; }
   }
+
+  .version-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* ── Version history ── */
+  .version-footer {
+    max-width: 800px;
+    margin: 40px auto 0;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .version-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+    transition: color 0.15s;
+  }
+
+  .version-toggle:hover { color: var(--accent); }
+
+  .version-toggle .arrow {
+    font-size: 9px;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+
+  .version-toggle.open .arrow { transform: rotate(90deg); }
+
+  .version-list {
+    display: none;
+    margin-top: 12px;
+  }
+
+  .version-list.open { display: block; }
+
+  .version-entry {
+    display: flex;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .version-entry:last-child { border-bottom: none; }
+
+  .version-tag {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 11px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .version-info { color: var(--text-muted); line-height: 1.6; }
+  .version-info strong { color: var(--text); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -306,6 +379,7 @@
   <div class="badge">MSP // Billing</div>
   <h1>Appointment Billing Form</h1>
   <p>Fill out the details below to generate a ready-to-paste billing summary</p>
+  <div class="version-badge">v1.5</div>
 </div>
 
 <div class="form-grid">
@@ -342,19 +416,6 @@
       TOTAL TIME &nbsp;<span id="grandTotalDisplay">0h 0m</span>
     </div>
 
-    <div class="row" style="margin-top:14px">
-      <div class="field">
-        <label>Appointment Type</label>
-        <select id="apptType">
-          <option value="">Select...</option>
-          <option>Onsite</option>
-          <option>Offsite</option>
-          <option>Remote</option>
-          <option>Project</option>
-          <option>Other</option>
-        </select>
-      </div>
-    </div>
   </div>
 
   <!-- SERVICE DETAILS -->
@@ -443,6 +504,17 @@
         <label style="font-size:10px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Time Out</label>
         <input type="time" class="de-out" onchange="updateRowTotal(${id})">
       </div>
+      <div class="de-field">
+        <label style="font-size:10px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Type</label>
+        <select class="de-type">
+          <option value="">Select...</option>
+          <option>Onsite</option>
+          <option>Offsite</option>
+          <option>Remote</option>
+          <option>Project</option>
+          <option>Other</option>
+        </select>
+      </div>
       <div class="de-total" id="rowTotal-${id}" style="display:${isMSC ? 'none' : ''}">--</div>
       <button class="remove-btn" onclick="removeDateRow(this)" title="Remove">✕</button>
     `;
@@ -508,12 +580,14 @@
       const dateEl = row.querySelector('.de-date');
       const inEl   = row.querySelector('.de-in');
       const outEl  = row.querySelector('.de-out');
+      const typeEl = row.querySelector('.de-type');
       const date   = dateEl.value ? formatDate(dateEl.value) : '';
-      if (isMSC) return date ? { date, time: null, duration: null } : null;
+      const apptType = typeEl?.value || '';
+      if (isMSC) return date ? { date, time: null, duration: null, apptType } : null;
       const inFmt  = inEl.value  ? formatTime(inEl.value)  : '';
       const outFmt = outEl.value ? formatTime(outEl.value) : '';
       const mins   = inEl.value && outEl.value ? calcMins(inEl.value, outEl.value) : 0;
-      return { date, time: inFmt && outFmt ? `${inFmt} – ${outFmt}` : '', duration: mins > 0 ? fmtDuration(mins) : '' };
+      return { date, time: inFmt && outFmt ? `${inFmt} – ${outFmt}` : '', duration: mins > 0 ? fmtDuration(mins) : '', apptType };
     }).filter(Boolean).filter(r => r.date);
   }
 
@@ -576,6 +650,7 @@
       dateRows.forEach((r, i) => {
         if (dateRows.length > 1) dtValue += `${i + 1}. `;
         dtValue += r.date;
+        if (r.apptType) dtValue += ` — ${r.apptType}`;
         if (!isMSC && r.time)     dtValue += `\n   ${r.time}`;
         if (!isMSC && r.duration) dtValue += `  (${r.duration})`;
         if (i < dateRows.length - 1) dtValue += '\n';
@@ -595,7 +670,6 @@
       rows.push(['dateTime', dtValue]);
     }
 
-    if (val('apptType'))       rows.push(['apptType',      val('apptType')]);
     if (val('issueSummary'))   rows.push(['summary',       val('issueSummary')]);
     if (val('workPerformed'))  rows.push(['workPerformed', val('workPerformed')]);
     if (equipment.length)      rows.push(['equipment',     equipment]);
@@ -668,6 +742,65 @@
 
   // Add one date row on load
   addDateRow();
+
+  function toggleVersionHistory(btn) {
+    btn.classList.toggle('open');
+    document.getElementById('versionList').classList.toggle('open');
+  }
 </script>
+
+<!-- VERSION HISTORY -->
+<div class="version-footer">
+  <button class="version-toggle" onclick="toggleVersionHistory(this)">
+    <span class="arrow">▶</span> Version History
+  </button>
+
+  <div class="version-list" id="versionList">
+
+    <div class="version-entry">
+      <div class="version-tag">v1.5</div>
+      <div class="version-info">
+        <strong>Appointment Type per Date</strong> — Moved appointment type into each individual date row so mixed visits (e.g. Onsite + Remote) can be logged per day. Added collapsible version history and version badge in header.
+      </div>
+    </div>
+
+    <div class="version-entry">
+      <div class="version-tag">v1.4</div>
+      <div class="version-info">
+        <strong>Multi-Date & Auto Time Totals</strong> — Date & Time section now supports multiple date entries with individual Time In / Time Out and auto-calculated duration per row plus grand total across all days.
+      </div>
+    </div>
+
+    <div class="version-entry">
+      <div class="version-tag">v1.3</div>
+      <div class="version-info">
+        <strong>Output Format Overhaul</strong> — Switched to bold-label / value-below format. Appointment Type options simplified to Onsite, Offsite, Remote, Project, Other. Billing Flags renamed to Equipment Details with checkboxes removed.
+      </div>
+    </div>
+
+    <div class="version-entry">
+      <div class="version-tag">v1.2</div>
+      <div class="version-info">
+        <strong>Field Cleanup</strong> — Removed Ticket/Work Order, Contact Name, PSA/RMM Reference, Systems/Devices, Resolution & Follow-Up, and Technician sections. Added Equipment Given to Customer with quantity. Expanded Service Category options.
+      </div>
+    </div>
+
+    <div class="version-entry">
+      <div class="version-tag">v1.1</div>
+      <div class="version-info">
+        <strong>Customer Type & Conditional Fields</strong> — Added Customer Type (MSC / Non-MSC / N/A). Selecting MSC hides Time In, Time Out, and Total Hours automatically.
+      </div>
+    </div>
+
+    <div class="version-entry">
+      <div class="version-tag">v1.0</div>
+      <div class="version-info">
+        <strong>Initial Release</strong> — MSP appointment billing form with client info, date & time, service details, systems affected, resolution, billing flags, and technician sections. Generates a ready-to-paste plain text billing summary.
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
