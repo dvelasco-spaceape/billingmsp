@@ -379,7 +379,7 @@
   <div class="badge">MSP // Billing</div>
   <h1>Appointment Billing Form</h1>
   <p>Fill out the details below to generate a ready-to-paste billing summary</p>
-  <div class="version-badge">v1.5</div>
+  <div class="version-badge">v1.6</div>
 </div>
 
 <div class="form-grid">
@@ -398,6 +398,7 @@
           <option value="">Select...</option>
           <option value="MSC">MSC</option>
           <option value="Non-MSC">Non-MSC</option>
+          <option value="Residential">Residential</option>
           <option value="N/A">N/A</option>
         </select>
       </div>
@@ -421,12 +422,6 @@
   <!-- SERVICE DETAILS -->
   <div class="card">
     <div class="card-title">Service Details</div>
-    <div class="row full" style="margin-bottom:12px">
-      <div class="field">
-        <label>Appointment Summary</label>
-        <input type="text" id="issueSummary" placeholder="Brief one-line description of the issue or request">
-      </div>
-    </div>
     <div class="row full">
       <div class="field">
         <label>Work Performed (detail)</label>
@@ -670,7 +665,6 @@
       rows.push(['dateTime', dtValue]);
     }
 
-    if (val('issueSummary'))   rows.push(['summary',       val('issueSummary')]);
     if (val('workPerformed'))  rows.push(['workPerformed', val('workPerformed')]);
     if (equipment.length)      rows.push(['equipment',     equipment]);
     if (val('billingNotes'))   rows.push(['notes',         val('billingNotes')]);
@@ -756,6 +750,13 @@
   </button>
 
   <div class="version-list" id="versionList">
+
+    <div class="version-entry">
+      <div class="version-tag">v1.6</div>
+      <div class="version-info">
+        <strong>Customer Type & Field Cleanup</strong> — Added Residential as a customer type option. Removed Appointment Summary field from Service Details.
+      </div>
+    </div>
 
     <div class="version-entry">
       <div class="version-tag">v1.5</div>
